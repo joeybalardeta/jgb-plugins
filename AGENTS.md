@@ -1,17 +1,16 @@
 # jgb-plugins
 
-This repo is a source of truth for agent **skills** (portable across Claude Code,
-Codex CLI, and anything else that reads the agentskills.io `SKILL.md` format) and
-Claude Code **plugins** (the Claude-only packaging layer: commands, subagents,
-hooks, MCP servers).
+This repo holds agent **skills** (`SKILL.md` directories) and **plugins** for
+Claude Code — the packaging layer that bundles skills with slash commands,
+subagents, hooks and MCP servers.
 
 ## Layout
 
-- `skills/` - shared, tool-agnostic skills. Each is a directory with a `SKILL.md`.
-- `plugins/<name>/` - Claude Code plugins. Plugin-specific skills live in
+- `skills/` — shared skills. Each is a directory with a `SKILL.md`.
+- `plugins/<name>/` — plugins. Plugin-specific skills live in
   `plugins/<name>/skills/`; shared skills are referenced, not copied.
-- `.claude-plugin/marketplace.json` - the catalog Claude Code installs from.
-- `tools/agentkit.py` - scaffolding, install, and validation CLI.
+- `.claude-plugin/marketplace.json` — the catalog Claude Code installs from.
+- `tools/agentkit.py` — scaffolding, install, and validation CLI.
 
 ## Rules when editing this repo
 
@@ -22,4 +21,5 @@ hooks, MCP servers).
   when it should not. It is the only thing the model sees before loading.
 - Keep `SKILL.md` bodies under ~500 lines; push detail into sibling
   `references/` files and link to them.
+- Register every new plugin in `marketplace.json` (`new-plugin` does this).
 - Run `python tools/agentkit.py validate` before committing.

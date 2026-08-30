@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """agentkit - scaffold, install and validate skills/plugins in this repo.
 
-Skills here follow the agentskills.io SKILL.md format, which both Claude Code
-and Codex CLI read. Plugins are Claude Code specific.
+Skills are SKILL.md directories; plugins are Claude Code plugins that bundle
+skills, commands, subagents, hooks and MCP servers.
 
 Usage:
     python tools/agentkit.py new-skill <name> [--plugin <plugin>] [--desc "..."]
     python tools/agentkit.py new-plugin <name> [--desc "..."]
-    python tools/agentkit.py install [--claude] [--codex] [--copy] [--dry-run]
+    python tools/agentkit.py install [--copy] [--dry-run]
     python tools/agentkit.py uninstall
     python tools/agentkit.py list
     python tools/agentkit.py validate
@@ -30,7 +30,7 @@ PLUGINS = REPO / "plugins"
 MARKETPLACE = REPO / ".claude-plugin" / "marketplace.json"
 
 SLUG_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
-LINK_NAME = "jgb"  # subdirectory name created inside each agent's skills dir
+LINK_NAME = "jgb"  # subdirectory created inside ~/.claude/skills
 
 C_OK, C_WARN, C_ERR, C_DIM, C_OFF = "\033[32m", "\033[33m", "\033[31m", "\033[2m", "\033[0m"
 if os.name == "nt" and not os.environ.get("WT_SESSION"):
@@ -253,15 +253,8 @@ def cmd_list(args: argparse.Namespace) -> int:
 # install
 # --------------------------------------------------------------------------
 
-def targets(args: argparse.Namespace) -> list[tuple[str, Path]]:
-    home = Path.home()
-    both = not (args.claude or args.codex)
-    out = []
-    if args.claude or both:
-        out.append(("claude", home / ".claude" / "skills" / LINK_NAME))
-    if args.codex or both:
-        out.append(("codex", home / ".agents" / "skills" / LINK_NAME))
-    return out
+def target(args: argparse.Namespace) -> Path:
+    return Path.home() / ".claude" / "skills" / LINK_NAME
 
 
 def link_or_copy(src: Path, dst: Path, force_copy: bool, dry: bool) -> str:
@@ -286,26 +279,24 @@ def link_or_copy(src: Path, dst: Path, force_copy: bool, dry: bool) -> str:
 def cmd_install(args: argparse.Namespace) -> int:
     if not SKILLS.is_dir():
         die("skills/ not found")
-    for label, dst in targets(args):
-        msg = link_or_copy(SKILLS, dst, args.copy, args.dry_run)
-        say(f"{label}: {msg}", C_OK)
+    say(link_or_copy(SKILLS, target(args), args.copy, args.dry_run), C_OK)
     if not args.dry_run:
-        say("\nrestart Claude Code / Codex to pick up new skills.", C_DIM)
-        say("plugins are installed separately in Claude Code:", C_DIM)
+        say("\nrestart Claude Code to pick up new skills.", C_DIM)
+        say("plugins install separately:", C_DIM)
         say("  /plugin marketplace add joeybalardeta/jgb-plugins", C_DIM)
     return 0
 
 
 def cmd_uninstall(args: argparse.Namespace) -> int:
-    for label, dst in targets(args):
-        if dst.is_symlink() or dst.is_file():
-            dst.unlink()
-            say(f"{label}: removed {dst}", C_OK)
-        elif dst.is_dir():
-            shutil.rmtree(dst)
-            say(f"{label}: removed {dst}", C_OK)
-        else:
-            say(f"{label}: nothing at {dst}", C_DIM)
+    dst = target(args)
+    if dst.is_symlink() or dst.is_file():
+        dst.unlink()
+        say(f"removed {dst}", C_OK)
+    elif dst.is_dir():
+        shutil.rmtree(dst)
+        say(f"removed {dst}", C_OK)
+    else:
+        say(f"nothing at {dst}", C_DIM)
     return 0
 
 
@@ -421,16 +412,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--desc")
     p.set_defaults(func=cmd_new_plugin)
 
-    p = sub.add_parser("install", help="link skills/ into Claude and Codex skill dirs")
-    p.add_argument("--claude", action="store_true", help="only ~/.claude/skills")
-    p.add_argument("--codex", action="store_true", help="only ~/.agents/skills")
+    p = sub.add_parser("install", help="link skills/ into ~/.claude/skills")
     p.add_argument("--copy", action="store_true", help="copy instead of symlink")
     p.add_argument("--dry-run", action="store_true")
     p.set_defaults(func=cmd_install)
 
-    p = sub.add_parser("uninstall", help="remove the installed links")
-    p.add_argument("--claude", action="store_true")
-    p.add_argument("--codex", action="store_true")
+    p = sub.add_parser("uninstall", help="remove the installed link")
     p.set_defaults(func=cmd_uninstall)
 
     p = sub.add_parser("list", help="list plugins and skills")
