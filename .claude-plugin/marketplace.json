@@ -8,5 +8,12 @@
     "description": "Joey's personal plugins and skills for Claude Code.",
     "version": "0.1.0"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "jgb-utils",
+      "source": "./plugins/jgb-utils",
+      "description": "General utility skills.",
+      "version": "0.1.0"
+    }
+  ]
 }
