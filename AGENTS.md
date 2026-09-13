@@ -10,7 +10,6 @@ subagents, hooks and MCP servers.
 - `plugins/<name>/` — plugins. Plugin-specific skills live in
   `plugins/<name>/skills/`; shared skills are referenced, not copied.
 - `.claude-plugin/marketplace.json` — the catalog Claude Code installs from.
-- `tools/agentkit.py` — scaffolding, install, and validation CLI.
 
 ## Rules when editing this repo
 
@@ -21,5 +20,4 @@ subagents, hooks and MCP servers.
   when it should not. It is the only thing the model sees before loading.
 - Keep `SKILL.md` bodies under ~500 lines; push detail into sibling
   `references/` files and link to them.
-- Register every new plugin in `marketplace.json` (`new-plugin` does this).
-- Run `python tools/agentkit.py validate` before committing.
+- Register every new plugin in `marketplace.json`.

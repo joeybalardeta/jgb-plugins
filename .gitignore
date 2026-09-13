@@ -12,6 +12,4 @@ __pycache__/
 venv/
 
 # Local-only state
-.agentkit-state.json
 node_modules/
-_to_delete/
